@@ -12,6 +12,6 @@ yarn build
 Usar o express ou nginx para servir o build do front.
 
 Portas:
-Express - 4000
-MQTT - 1883
-WebSocket - 8888
+* Express - 4000
+* MQTT - 1883
+* WebSocket - 8888
