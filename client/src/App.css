@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  font-family: 'Roboto', sans-serif;
+}
+h2,
+h3 {
+  font-weight: 400;
+}
+.content {
+  padding: 5px 30px;
+  display: flex;
+  justify-content: flex-start;
+}
