@@ -21,13 +21,13 @@ class Settings extends Component {
     this.state = {
       ipError: '',
       protocol: 1,
-      ip: 'localhost',
+      ip: document.location.hostname,
       payload: '',
       limit: '10',
       connectError: false,
       qos: 0,
-      wsPort: '8888',
-      mqttPort: '4000',
+      wsPort: '8001',
+      mqttPort: '8000',
     }
   }
   setIp = event =>
