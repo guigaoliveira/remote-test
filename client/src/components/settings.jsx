@@ -176,7 +176,7 @@ class Settings extends Component {
           errorText={this.state.ipError}
           onChange={this.isRequired}
           onBlur={this.setIp}
-          defaultValue="localhost"
+          defaultValue={this.state.ip}
         />
         <SelectField
           floatingLabelText="Protocol"
@@ -201,12 +201,14 @@ class Settings extends Component {
           floatingLabelText="WebSocket Port"
           type="text"
           onBlur={this.setWsPort}
+          defaultValue={this.state.wsPort}
         />
         <TextField
           hintText="MQTT port"
           floatingLabelText="MQTT port"
           type="text"
           onBlur={this.setMqttPort}
+          defaultValue={this.state.mqttPort}
         />
         <TextField
           hintText="Payload"
@@ -221,7 +223,7 @@ class Settings extends Component {
           floatingLabelText="Quantity of measures"
           type="text"
           onBlur={this.setLimit}
-          defaultValue="10"
+          defaultValue={10}
         />
         <RaisedButton
           label="Start"

@@ -9,7 +9,15 @@ h3 {
   font-weight: 400;
 }
 .content {
-  padding: 5px 30px;
+  padding: 5px 10px;
   display: flex;
-  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.grid {
+  flex-grow: 5;
+  flex-basis: 320px;
+  padding-bottom: 20px;
+  padding-left: 20px;
+  margin-bottom: 10px;
+  margin-right: 10px;
 }

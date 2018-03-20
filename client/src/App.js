@@ -47,13 +47,13 @@ class App extends Component {
             showMenuIconButton={false}
           />
           <div className="content">
-            <div style={{ width: '300px' }}>
+            <div className="grid">
               <Settings
                 setValuesToPrint={this.setValuesToPrint}
                 setLoading={this.setLoading}
               />
             </div>
-            <div style={{ width: '100%', marginLeft: 50 }}>
+            <div className="grid">
               <Results
                 valuesToPrint={this.state.valuesToPrint}
                 loading={this.state.loading}
