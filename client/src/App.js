@@ -47,7 +47,7 @@ class App extends Component {
             showMenuIconButton={false}
           />
           <div className="content">
-            <div>
+            <div style={{ width: '300px' }}>
               <Settings
                 setValuesToPrint={this.setValuesToPrint}
                 setLoading={this.setLoading}

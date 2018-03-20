@@ -35,9 +35,9 @@ export function getStd(value) {
 }
 
 export function getMax(array) {
-  return Math.max(...array)
+  return Math.max(...array).toFixed(6)
 }
 
 export function getMin(array) {
-  return Math.min(...array)
+  return Math.min(...array).toFixed(6)
 }

@@ -19,7 +19,7 @@ const ListOfValues = props => {
   const toRender = results.map((item, index) => (
     <div key={index}>
       <ListItem style={addBorderBottom}>
-        {index + 1} - {item} ms
+        {index + 1} - {item.toFixed(6)} ms
       </ListItem>
     </div>
   ))

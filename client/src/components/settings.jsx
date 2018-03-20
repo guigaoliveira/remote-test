@@ -27,7 +27,7 @@ class Settings extends Component {
       connectError: false,
       qos: 0,
       wsPort: '8888',
-      mqtPort: '4000',
+      mqttPort: '4000',
     }
   }
   setIp = event =>
@@ -56,6 +56,9 @@ class Settings extends Component {
     const mqtt = mqttClient.connect(
       `mqtt://${this.state.ip}:${this.state.mqttPort}`,
     )
+    let data = []
+    let t0 = 0
+    let count = 0
 
     mqtt.stream.on('error', e => {
       console.log(e)
@@ -71,25 +74,38 @@ class Settings extends Component {
       this.setState({
         connectError: false,
       })
-      mqtt.subscribe('/+', {}, err => {
-        mqtt.publish('/limit', this.state.limit)
-        mqtt.publish('/payload', this.state.payload)
-        mqtt.publish('/qos', `${this.state.qos}`)
+      mqtt.subscribe('/+', { qos: this.state.qos }, () => {
+        mqtt.publish(
+          '/p',
+          this.state.payload,
+          {
+            qos: this.state.qos,
+          },
+          () => {
+            t0 = performance.now()
+          },
+        )
       })
     })
 
     mqtt.on('message', (topic, message) => {
-      if (topic === '/') {
-        mqtt.publish('/', this.state.payload, {
-          qos: this.state.qos,
-        })
-      }
-      if (topic === '/result') {
-        this.props.setValuesToPrint(
-          String(message)
-            .split(',')
-            .map(item => item / 1e6),
-        )
+      if (count < this.state.limit) {
+        if (topic === '/g') {
+          data.push(performance.now() - t0)
+          mqtt.publish(
+            '/p',
+            this.state.payload,
+            {
+              qos: this.state.qos,
+            },
+            () => {
+              t0 = performance.now()
+            },
+          )
+          count++
+        }
+      } else {
+        this.props.setValuesToPrint(data)
         mqtt.end()
         return false
       }
@@ -101,17 +117,19 @@ class Settings extends Component {
     }
     this.ws = new WebSocket(`ws://${this.state.ip}:${this.state.wsPort}`)
     const ws = this.ws
-    ws.onmessage = ({ data }) => {
-      if (data.includes('finishCount')) {
-        this.props.setValuesToPrint(
-          data
-            .split('-')[1]
-            .split(',')
-            .map(item => item / 1e6),
-        )
+    let data = []
+    let t0 = 0
+    let count = 0
+    ws.onmessage = () => {
+      if (count < this.state.limit) {
+        data.push(performance.now() - t0)
+        ws.send(this.state.payload)
+        t0 = performance.now()
+        count++
+      } else {
+        this.props.setValuesToPrint(data)
         return false
       }
-      ws.send(this.state.payload)
     }
 
     ws.onopen = () => {
@@ -119,8 +137,8 @@ class Settings extends Component {
       this.setState({
         connectError: false,
       })
-      send(ws, { type: 'setPayload', data: this.state.payload })
-      send(ws, { type: 'setLimit', data: this.state.limit })
+      ws.send(this.state.payload)
+      t0 = performance.now()
     }
 
     ws.onerror = event => {
