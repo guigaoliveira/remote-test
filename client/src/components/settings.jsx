@@ -26,6 +26,8 @@ class Settings extends Component {
       limit: '10',
       connectError: false,
       qos: 0,
+      wsPort: '8888',
+      mqtPort: '4000',
     }
   }
   setIp = event =>
@@ -42,9 +44,18 @@ class Settings extends Component {
     this.setState({
       limit: event.target.value,
     })
-
+  setWsPort = event =>
+    this.setState({
+      wsPort: event.target.value,
+    })
+  setMqttPort = event =>
+    this.setState({
+      mqttPort: event.target.value,
+    })
   mqttPart = () => {
-    const mqtt = mqttClient.connect(`mqtt://${this.state.ip}:4000`)
+    const mqtt = mqttClient.connect(
+      `mqtt://${this.state.ip}:${this.state.mqttPort}`,
+    )
 
     mqtt.stream.on('error', e => {
       console.log(e)
@@ -88,7 +99,7 @@ class Settings extends Component {
     if (this.ws) {
       this.ws.close()
     }
-    this.ws = new WebSocket(`ws://${this.state.ip}:8888`)
+    this.ws = new WebSocket(`ws://${this.state.ip}:${this.state.wsPort}`)
     const ws = this.ws
     ws.onmessage = ({ data }) => {
       if (data.includes('finishCount')) {
@@ -149,10 +160,42 @@ class Settings extends Component {
           onBlur={this.setIp}
           defaultValue="localhost"
         />
+        <SelectField
+          floatingLabelText="Protocol"
+          value={this.state.protocol}
+          onChange={this.setProtocol}
+        >
+          <MenuItem value={1} primaryText="MQTT" />
+          <MenuItem value={2} primaryText="WebSocket" />
+        </SelectField>
+        {this.state.protocol === 1 && (
+          <SelectField
+            floatingLabelText="Quality of service"
+            value={this.state.qos}
+            onChange={this.setQos}
+          >
+            <MenuItem value={0} primaryText="Qos 0" />
+            <MenuItem value={1} primaryText="Qos 1" />
+          </SelectField>
+        )}
+        <TextField
+          hintText="WebSocket Port"
+          floatingLabelText="WebSocket Port"
+          type="text"
+          onBlur={this.setWsPort}
+        />
+        <TextField
+          hintText="MQTT port"
+          floatingLabelText="MQTT port"
+          type="text"
+          onBlur={this.setMqttPort}
+        />
         <TextField
           hintText="Payload"
           floatingLabelText="Payload"
           type="text"
+          multiLine
+          rowsMax={3}
           onBlur={this.setPayload}
         />
         <TextField
@@ -162,26 +205,6 @@ class Settings extends Component {
           onBlur={this.setLimit}
           defaultValue="10"
         />
-        <SelectField
-          floatingLabelText="Protocol"
-          value={this.state.protocol}
-          onChange={this.setProtocol}
-          style={{ width: 150 }}
-        >
-          <MenuItem value={1} primaryText="MQTT" />
-          <MenuItem value={2} primaryText="WebSocket" />
-        </SelectField>
-        {this.state.protocol === 1 && (
-          <SelectField
-            floatingLabelText="Protocol"
-            value={this.state.qos}
-            onChange={this.setQos}
-            style={{ width: 150 }}
-          >
-            <MenuItem value={0} primaryText="Qos 0" />
-            <MenuItem value={1} primaryText="Qos 1" />
-          </SelectField>
-        )}
         <RaisedButton
           label="Start"
           primary

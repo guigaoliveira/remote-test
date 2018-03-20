@@ -10,16 +10,17 @@ import {
   getMedian,
   getMax,
   getMin,
+  getSum,
 } from '../modules/statistics'
 
+const addBorderBottom = { borderBottom: '1px solid rgba(0,0,0,0.1)' }
 const ListOfValues = props => {
   const results = props.items
   const toRender = results.map((item, index) => (
     <div key={index}>
-      <ListItem>
+      <ListItem style={addBorderBottom}>
         {index + 1} - {item} ms
       </ListItem>
-      <Divider />
     </div>
   ))
   const styleBoxResults = {
@@ -53,22 +54,19 @@ const Statistics = props => {
   const median = getMedian(props.items)
   const max = getMax(props.items)
   const min = getMin(props.items)
+  const sum = getSum(props.items)
   return (
     <div>
       <h2>
         Statistics <i style={{ marginLeft: 3 }} className="fas fa-chart-line" />
       </h2>
-      <ListItem>Mean: {mean} ms</ListItem>
-      <Divider />
-      <ListItem>Median: {median} ms</ListItem> <Divider />
-      <ListItem>Variance: {variance} ms</ListItem>
-      <Divider />
-      <ListItem>Standard deviation: {std} ms</ListItem>
-      <Divider />
-      <ListItem>Max: {max} ms</ListItem>
-      <Divider />
-      <ListItem>Min: {min} ms</ListItem>
-      <Divider />
+      <ListItem style={addBorderBottom}>Mean: {mean} ms</ListItem>
+      <ListItem style={addBorderBottom}>Median: {median} ms</ListItem>
+      <ListItem style={addBorderBottom}>Variance: {variance} ms</ListItem>
+      <ListItem style={addBorderBottom}>Standard deviation: {std} ms</ListItem>
+      <ListItem style={addBorderBottom}>Max: {max} ms</ListItem>
+      <ListItem style={addBorderBottom}>Min: {min} ms</ListItem>
+      <ListItem style={addBorderBottom}>Total: {sum} ms</ListItem>
     </div>
   )
 }

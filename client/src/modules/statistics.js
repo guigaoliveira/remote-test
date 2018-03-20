@@ -1,10 +1,14 @@
-export function getMean(array) {
+export function getSum(array) {
   let sum = 0
   let len = array.length
   for (let i = 0; i < len; i++) {
     sum += array[i]
   }
-  return (sum / len).toFixed(6)
+  return sum.toFixed(6)
+}
+export function getMean(array) {
+  const sum = getSum(array)
+  return (sum / array.length).toFixed(6)
 }
 
 export function getVariance(array, mean) {
