@@ -13,7 +13,7 @@ Usar o express ou nginx para servir o build do front.
 
 Portas:
 
-* Express - 4000
-* MQTT Over Express - 4000
+* Express - 8000
+* MQTT Over Express - 8000
 * MQTT - 1883
-* WebSocket - 8888
+* WebSocket - 8001
