@@ -18,13 +18,13 @@ class Settings extends Component {
     this.state = {
       ipError: '',
       protocol: 1,
-      ip: 'localhost',
+      ip: document.location.hostname,
       payload: '',
       limit: '10',
       connectError: false,
       qos: 0,
       wsPort: '8001',
-      mqttPort: '8080',
+      mqttPort: '8000',
     }
   }
   setIp = event =>
@@ -173,7 +173,7 @@ class Settings extends Component {
           errorText={this.state.ipError}
           onChange={this.isRequired}
           onBlur={this.setIp}
-          defaultValue="localhost"
+          defaultValue={this.state.ip}
         />
         <SelectField
           floatingLabelText="Protocol"
@@ -199,6 +199,7 @@ class Settings extends Component {
           type="text"
           defaultValue={this.state.wsPort}
           onBlur={this.setWsPort}
+          defaultValue={this.state.wsPort}
         />
         <TextField
           hintText="MQTT port"
@@ -206,6 +207,7 @@ class Settings extends Component {
           type="text"
           defaultValue={this.state.mqttPort}
           onBlur={this.setMqttPort}
+          defaultValue={this.state.mqttPort}
         />
         <TextField
           hintText="Payload"
@@ -220,7 +222,7 @@ class Settings extends Component {
           floatingLabelText="Quantity of measures"
           type="text"
           onBlur={this.setLimit}
-          defaultValue="10"
+          defaultValue={10}
         />
         <RaisedButton
           label="Start"
