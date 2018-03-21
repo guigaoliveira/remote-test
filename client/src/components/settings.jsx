@@ -23,8 +23,8 @@ class Settings extends Component {
       limit: '10',
       connectError: false,
       qos: 0,
-      wsPort: '8888',
-      mqttPort: '4000',
+      wsPort: '8001',
+      mqttPort: '8080',
     }
   }
   setIp = event =>
@@ -77,9 +77,10 @@ class Settings extends Component {
           this.state.payload,
           {
             qos: this.state.qos,
-            retain: false,
           },
-          () => {},
+          () => {
+            t0 = performance.now()
+          },
         )
       })
     })
@@ -196,12 +197,14 @@ class Settings extends Component {
           hintText="WebSocket Port"
           floatingLabelText="WebSocket Port"
           type="text"
+          defaultValue={this.state.wsPort}
           onBlur={this.setWsPort}
         />
         <TextField
           hintText="MQTT port"
           floatingLabelText="MQTT port"
           type="text"
+          defaultValue={this.state.mqttPort}
           onBlur={this.setMqttPort}
         />
         <TextField
