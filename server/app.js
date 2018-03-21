@@ -11,4 +11,4 @@ app.use(bodyParser.json())
 
 mqtt.attachHttpServer(server)
 
-server.listen(4000, () => console.log('Servidor rodando na porta 4000'))
+server.listen(8000, () => console.log('Servidor rodando na porta 4000'))
