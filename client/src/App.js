@@ -19,13 +19,14 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      valuesToPrint: [],
+      valuesToResult: [],
       loading: false,
+      fromSettings: {},
     }
   }
-  setValuesToPrint = arr => {
+  setValuesToResult = arr => {
     this.setState({
-      valuesToPrint: arr,
+      valuesToResult: arr,
     })
     if (arr.length > 0) {
       this.setState({
@@ -37,7 +38,14 @@ class App extends Component {
     this.setState({
       loading: state,
     })
-
+  getPropsFromSettings = ({ protocol, downloadLabel }) => {
+    this.setState({
+      fromSettings: {
+        protocol,
+        downloadLabel,
+      },
+    })
+  }
   render() {
     return (
       <MuiThemeProvider muiTheme={muiTheme}>
@@ -47,15 +55,17 @@ class App extends Component {
             showMenuIconButton={false}
           />
           <div className="content">
-            <div className="grid">
+            <div className="grid row-1">
               <Settings
-                setValuesToPrint={this.setValuesToPrint}
+                setValuesToResult={this.setValuesToResult}
                 setLoading={this.setLoading}
+                setPropsToResult={this.getPropsFromSettings}
               />
             </div>
-            <div className="grid">
+            <div className="grid row-9">
               <Results
-                valuesToPrint={this.state.valuesToPrint}
+                valuesToResult={this.state.valuesToResult}
+                fromSettings={this.state.fromSettings}
                 loading={this.state.loading}
               />
             </div>

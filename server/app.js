@@ -14,7 +14,7 @@ app.use('/', express.static('public'))
 
 mqtt.attachHttpServer(server)
 
-const port = 8080
+const port = 8000
 server.listen(port, () =>
   console.log(`Servidor express rodando na porta ${port}`),
 )

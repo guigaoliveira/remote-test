@@ -12,6 +12,8 @@ const ConnectError = () => (
   </span>
 )
 
+const protocols = ['MQTT', 'WebSocket']
+
 class Settings extends Component {
   constructor(props) {
     super(props)
@@ -62,7 +64,7 @@ class Settings extends Component {
       this.setState({
         connectError: true,
       })
-      this.props.setValuesToPrint([])
+      this.props.setValuesToResult([])
       mqtt.end()
     })
 
@@ -71,7 +73,16 @@ class Settings extends Component {
       this.setState({
         connectError: false,
       })
-      mqtt.subscribe('/+', { qos: this.state.qos }, () => {
+      mqtt.subscribe('/g', { qos: this.state.qos }, () => {
+        mqtt.publish('/p', this.state.payload, () => {
+          t0 = performance.now()
+        })
+      })
+    })
+
+    mqtt.on('message', (topic, message) => {
+      if (count < this.state.limit && topic === '/g') {
+        data.push(performance.now() - t0)
         mqtt.publish(
           '/p',
           this.state.payload,
@@ -82,27 +93,9 @@ class Settings extends Component {
             t0 = performance.now()
           },
         )
-      })
-    })
-
-    mqtt.on('message', (topic, message) => {
-      if (count < this.state.limit) {
-        if (topic === '/g') {
-          data.push(performance.now() - t0)
-          mqtt.publish(
-            '/p',
-            this.state.payload,
-            {
-              qos: this.state.qos,
-            },
-            () => {
-              t0 = performance.now()
-            },
-          )
-          count++
-        }
+        count++
       } else {
-        this.props.setValuesToPrint(data)
+        this.props.setValuesToResult(data)
         mqtt.end()
         return false
       }
@@ -124,7 +117,7 @@ class Settings extends Component {
         t0 = performance.now()
         count++
       } else {
-        this.props.setValuesToPrint(data)
+        this.props.setValuesToResult(data)
         return false
       }
     }
@@ -142,16 +135,24 @@ class Settings extends Component {
       this.setState({
         connectError: true,
       })
-      this.props.setValuesToPrint([])
+      this.props.setValuesToResult([])
     }
   }
   buttonOnClick = event => {
     event.stopPropagation()
     event.preventDefault()
+    const protocolIndex = this.state.protocol
+    const protocol = protocols[protocolIndex - 1]
+    this.props.setPropsToResult({
+      protocol,
+      downloadLabel: `${protocol}-${
+        protocolIndex === 1 ? `qos${this.state.qos}` : ''
+      }-${this.state.limit}-${Date.now()}`,
+    })
     if (this.state.ipError) return false
-    if (this.state.limit <= 0) return this.props.setValuesToPrint([])
-    if (this.state.protocol === 1) this.mqttPart()
-    if (this.state.protocol === 2) this.wsPart()
+    if (this.state.limit <= 0) return this.props.setValuesToResult([])
+    if (protocolIndex === 1) this.mqttPart()
+    if (protocolIndex === 2) this.wsPart()
   }
 
   isRequired = event =>
@@ -193,28 +194,30 @@ class Settings extends Component {
             <MenuItem value={1} primaryText="Qos 1" />
           </SelectField>
         )}
-        <TextField
-          hintText="WebSocket Port"
-          floatingLabelText="WebSocket Port"
-          type="text"
-          defaultValue={this.state.wsPort}
-          onBlur={this.setWsPort}
-          defaultValue={this.state.wsPort}
-        />
-        <TextField
-          hintText="MQTT port"
-          floatingLabelText="MQTT port"
-          type="text"
-          defaultValue={this.state.mqttPort}
-          onBlur={this.setMqttPort}
-          defaultValue={this.state.mqttPort}
-        />
+        {this.state.protocol === 2 && (
+          <TextField
+            hintText="WebSocket Port"
+            floatingLabelText="WebSocket Port"
+            type="text"
+            defaultValue={this.state.wsPort}
+            onBlur={this.setWsPort}
+          />
+        )}
+        {this.state.protocol === 1 && (
+          <TextField
+            hintText="MQTT port"
+            floatingLabelText="MQTT port"
+            type="text"
+            defaultValue={this.state.mqttPort}
+            onBlur={this.setMqttPort}
+          />
+        )}
         <TextField
           hintText="Payload"
           floatingLabelText="Payload"
           type="text"
           multiLine
-          rowsMax={3}
+          rowsMax={10}
           onBlur={this.setPayload}
         />
         <TextField
@@ -222,7 +225,7 @@ class Settings extends Component {
           floatingLabelText="Quantity of measures"
           type="text"
           onBlur={this.setLimit}
-          defaultValue={10}
+          defaultValue={this.state.limit}
         />
         <RaisedButton
           label="Start"
