@@ -5,9 +5,6 @@ import MenuItem from 'material-ui/MenuItem'
 import RaisedButton from 'material-ui/RaisedButton'
 import mqttClient from 'mqtt'
 
-const send = (ws, { type, data }, fn) =>
-  ws.send(`${type ? type + '-' : ''}${data}`, fn)
-
 const ConnectError = () => (
   <span style={{ marginTop: 12, color: 'red' }}>
     <i className="fas fa-exclamation-triangle" style={{ paddingRight: 5 }} />
@@ -80,10 +77,9 @@ class Settings extends Component {
           this.state.payload,
           {
             qos: this.state.qos,
+            retain: false,
           },
-          () => {
-            t0 = performance.now()
-          },
+          () => {},
         )
       })
     })
