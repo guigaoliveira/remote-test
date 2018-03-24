@@ -60,7 +60,6 @@ class Settings extends Component {
     let count = 0
 
     mqtt.stream.on('error', e => {
-      console.log(e)
       this.setState({
         connectError: true,
       })
