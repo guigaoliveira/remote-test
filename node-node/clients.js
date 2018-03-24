@@ -3,7 +3,7 @@ const mqtt = require('mqtt')
 const WebSocket = require('ws')
 const { performance } = require('perf_hooks')
 const configs = require('./configs')
-const {
+/*const {
   getMean,
   getVariance,
   getStd,
@@ -11,131 +11,127 @@ const {
   getMax,
   getMin,
   getSum,
-} = require('./modules/statistics')
+} = require('./modules/statistics')*/
 
-const client = mqtt.connect(configs.mqtt.url)
+const arrayOfNumbers = arr => arr.split(',').map(Number)
 
-let lastTimeMqtt = 0.0
-let countMqtt = 0
-let dataMqtt = []
+// mqtt part
+const mqttPart = payloadSize => {
+  const client = mqtt.connect(configs.mqtt.url)
 
-client.on('connect', () => {
-  console.log('[MQTT-client-log] Connected')
-  client.subscribe('/g', { qos: configs.mqtt.qos }, () => {
-    client.publish(
-      '/p',
-      configs.mqtt.payload,
-      { qos: configs.mqtt.qos },
-      () => {
-        lastTimeMqtt = performance.now()
-      },
-    )
+  const mqttTime1 = []
+  const mqttTime4 = []
+  let mqttCount = 0
+  let mqttReceived = false
+  const payload = '1'.repeat(payloadSize)
+
+  client.on('connect', () => {
+    console.log('[MQTT-client-log] Connected')
+    client.subscribe('/postall')
+    client.subscribe('/g', { qos: configs.mqtt.qos }, () => {
+      client.publish('/p', payload, { qos: configs.mqtt.qos }, () => {
+        mqttTime1.push(performance.now())
+      })
+    })
   })
-})
 
-client.on('message', (topic, message) => {
-  if (countMqtt < configs.mqtt.limit) {
-    if (!topic === '/g') return false
-    dataMqtt.push(performance.now() - lastTimeMqtt)
-    client.publish(
-      '/p',
-      configs.mqtt.payload,
-      { qos: configs.mqtt.qos },
-      () => {
-        lastTimeMqtt = performance.now()
-      },
-    )
-    countMqtt++
-  } else {
-    const mean = getMean(dataMqtt)
-    const variance = getVariance(dataMqtt, mean)
-    const median = getMedian(dataMqtt)
-    const standardDeviation = getStd(variance)
-    const max = getMax(dataMqtt)
-    const min = getMin(dataMqtt)
-    const total = getSum(dataMqtt)
-    console.log(
-      '[MQTT-client-log] Results:',
-      JSON.stringify(
-        {
-          mean,
-          variance,
-          median,
-          standardDeviation,
-          max,
-          min,
-          total,
-        },
-        null,
-        2,
-      ),
-    )
-    try {
-      const fileName = `results-mqtt/mqtt-qos${configs.mqtt.qos}-${
-        configs.mqtt.limit
-      }-${Date.now()}.csv`
-      const file = fs.writeFileSync(fileName, dataMqtt, 'utf8')
-      console.log('[MQTT-client-log] File saved:', fileName)
-    } catch (e) {
-      console.log('[MQTT-client-log] File was not saved, error: ', e)
+  client.on('message', (topic, message) => {
+    if (mqttCount !== configs.mqtt.limit) {
+      if (topic === '/g') {
+        mqttTime4.push(performance.now())
+        client.publish('/p', payload, { qos: configs.mqtt.qos }, () => {
+          if (mqttCount + 1 !== configs.mqtt.limit)
+            mqttTime1.push(performance.now())
+        })
+        mqttCount++
+      }
     }
-    client.end()
-    return false
-  }
-})
+    if (mqttCount === configs.mqtt.limit && !mqttReceived)
+      client.publish('/getall', '', { qos: 1 })
 
-const ws = new WebSocket(configs.ws.url)
+    if (topic === '/postall' && !mqttReceived) {
+      mqttReceived = true
+      let [mqttTime2, mqttTime3] = String(message).split('|')
+      mqttTime2 = arrayOfNumbers(mqttTime2)
+      mqttTime3 = arrayOfNumbers(mqttTime3)
 
-let dataWs = []
-let lastTimeWs = 0
-let countWs = 0
-
-ws.on('open', () => {
-  console.log('[WS-client-log] Connected')
-  ws.send(configs.ws.payload)
-  lastTimeWs = performance.now()
-})
-
-ws.on('message', () => {
-  if (countWs < configs.ws.limit) {
-    dataWs.push(performance.now() - lastTimeWs)
-    ws.send(configs.ws.payload)
-    lastTimeWs = performance.now()
-    countWs++
-  } else {
-    const mean = getMean(dataWs)
-    const variance = getVariance(dataWs, mean)
-    const median = getMedian(dataWs)
-    const standardDeviation = getStd(variance)
-    const max = getMax(dataWs)
-    const min = getMin(dataWs)
-    const total = getSum(dataWs)
-    console.log(
-      '[WS-client-log] Results:',
-      JSON.stringify(
-        {
-          mean,
-          variance,
-          median,
-          standardDeviation,
-          max,
-          min,
-          total,
-        },
-        null,
-        2,
-      ),
-    )
-    try {
-      const fileName = `results-ws/websocket-${
-        configs.ws.limit
-      }-${Date.now()}.csv`
-      const file = fs.writeFileSync(fileName, dataWs, 'utf8')
-      console.log('[WS-client-log] File saved:', fileName)
-    } catch (e) {
-      console.log('[WS-client-log] File was not saved, error: ', e)
+      const resultsToCSV = [
+        `T1, T2, T3, T4\n`,
+        ...mqttTime1.map(
+          (item, index) =>
+            `${item},${mqttTime2[index]},${mqttTime3[index]},${
+              mqttTime4[index]
+            }\n`,
+        ),
+      ]
+      try {
+        const fileName = `results-mqtt/mqtt-${
+          configs.mqtt.limit
+        }-${payloadSize}-${new Date()}.csv`
+        const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
+        console.log('[MQTT-client-log] New CSV file saved:', fileName)
+      } catch (e) {
+        console.log('[MQTT-client-log] A CSV file can not be saved, error: ', e)
+      }
+      client.end()
+      return false
     }
-  }
-})
+  })
+}
+// ws part
+const wsPart = payloadSize => {
+  const ws = new WebSocket(configs.ws.url)
+  const payload = '1'.repeat(payloadSize)
+  const wsTime4 = []
+  const wsTime1 = []
+  let wsCount = 0
+  let wsReceived = false
 
-ws.on('error', e => console.log('Ws error: ', e))
+  ws.on('open', () => {
+    console.log('[WS-client-log] Connected')
+    ws.send(payload)
+    wsTime1.push(performance.now())
+  })
+
+  ws.on('message', msg => {
+    if (wsCount !== configs.ws.limit) {
+      if (!msg.includes('postAll-')) {
+        wsTime4.push(performance.now())
+        ws.send(payload)
+        if (wsCount + 1 !== configs.ws.limit) wsTime1.push(performance.now())
+        wsCount++
+      }
+    } else {
+      ws.send('getAll')
+    }
+    if (msg.includes('postAll-') && !wsReceived) {
+      wsReceived = true
+      let [wsTime2, wsTime3] = msg.replace('postAll-', '').split('|')
+      wsTime2 = arrayOfNumbers(wsTime2)
+      wsTime3 = arrayOfNumbers(wsTime3)
+
+      const resultsToCSV = [
+        `T1, T2, T3, T4\n`,
+        ...wsTime1.map(
+          (item, index) =>
+            `${item},${wsTime2[index]},${wsTime3[index]},${wsTime4[index]}\n`,
+        ),
+      ]
+      try {
+        const fileName = `results-ws/websocket-${
+          configs.ws.limit
+        }-${payloadSize}-${new Date()}.csv`
+        const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
+        console.log('[WS-client-log] New CSV file saved:', fileName)
+      } catch (e) {
+        console.log('[WS-client-log] A CSV file can not be saved, error: ', e)
+      }
+      ws.terminate()
+    }
+  })
+
+  ws.on('error', e => console.log('Ws error: ', e))
+}
+
+configs.ws.payloadSizes.forEach(item => wsPart(item))
+configs.mqtt.payloadSizes.forEach(item => mqttPart(item))
