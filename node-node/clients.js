@@ -15,9 +15,10 @@ const configs = require('./configs')
 
 const arrayOfNumbers = arr => arr.split(',').map(Number)
 
-const mqttClient = mqtt.connect(configs.mqtt.url)
 // mqtt part
-const mqttPart = (client, payloadSize) => {
+const mqttPart = payloadSize => {
+  const client = mqtt.connect(configs.mqtt.url)
+
   const mqttTime1 = []
   const mqttTime4 = []
   let mqttCount = 0
@@ -72,13 +73,14 @@ const mqttPart = (client, payloadSize) => {
       } catch (e) {
         console.log('[MQTT-client-log] A CSV file can not be saved, error: ', e)
       }
+      client.end()
       return false
     }
   })
 }
 // ws part
-const wsConnect = new WebSocket(configs.ws.url)
-const wsPart = (ws, payloadSize) => {
+const wsPart = payloadSize => {
+  const ws = new WebSocket(configs.ws.url)
   const payload = '1'.repeat(payloadSize)
   const wsTime4 = []
   const wsTime1 = []
@@ -109,7 +111,7 @@ const wsPart = (ws, payloadSize) => {
       wsTime3 = arrayOfNumbers(wsTime3)
 
       const resultsToCSV = [
-        `T1, T2, T3, T4\n`,
+        `T1 (ms),T2 (ms),T3 (ms),T4 (ms)\n`,
         ...wsTime1.map(
           (item, index) =>
             `${item},${wsTime2[index]},${wsTime3[index]},${wsTime4[index]}\n`,
@@ -124,11 +126,12 @@ const wsPart = (ws, payloadSize) => {
       } catch (e) {
         console.log('[WS-client-log] A CSV file can not be saved, error: ', e)
       }
+      ws.terminate()
     }
   })
 
   ws.on('error', e => console.log('Ws error: ', e))
 }
 
-configs.ws.payloadSizes.forEach(item => wsPart(wsConnect, item))
-configs.mqtt.payloadSizes.forEach(item => mqttPart(mqttClient, item))
+configs.ws.payloadSizes.forEach(item => wsPart(item))
+configs.mqtt.payloadSizes.forEach(item => mqttPart(item))
