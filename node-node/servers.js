@@ -38,7 +38,6 @@ mqtt.on('published', packet => {
   if (packet.topic === '/getall') {
     mqtt.publish({
       payload: mqttTime2.join(',') + '|' + mqttTime3.join(','),
-      qos: 1,
       topic: '/postall',
     })
     mqttTime2 = []

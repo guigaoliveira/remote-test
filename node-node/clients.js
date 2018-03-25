@@ -2,6 +2,7 @@ const fs = require('fs')
 const mqtt = require('mqtt')
 const WebSocket = require('ws')
 const configs = require('./configs')
+
 /*const {
   getMean,
   getVariance,
@@ -15,9 +16,8 @@ const configs = require('./configs')
 const arrayOfNumbers = arr => arr.split(',').map(Number)
 
 // mqtt part
-const mqttPart = payloadSize => {
-  const client = mqtt.connect(configs.mqtt.url)
-
+const mqttClient = mqtt.connect(configs.mqtt.url)
+const mqttPart = (client, payloadSize, index, last) => {
   const mqttTime1 = []
   const mqttTime4 = []
   let mqttCount = 0
@@ -52,7 +52,6 @@ const mqttPart = payloadSize => {
       let [mqttTime2, mqttTime3] = String(message).split('|')
       mqttTime2 = arrayOfNumbers(mqttTime2)
       mqttTime3 = arrayOfNumbers(mqttTime3)
-
       const resultsToCSV = [
         `T1, T2, T3, T4\n`,
         ...mqttTime1.map(
@@ -71,7 +70,7 @@ const mqttPart = payloadSize => {
       } catch (e) {
         console.log('[MQTT-client-log] A CSV file can not be saved, error: ', e)
       }
-      client.end()
+      if (index === last) client.end()
       return false
     }
   })
@@ -132,4 +131,7 @@ const wsPart = payloadSize => {
 }
 
 configs.ws.payloadSizes.forEach(item => wsPart(item))
-configs.mqtt.payloadSizes.forEach(item => mqttPart(item))
+
+configs.mqtt.payloadSizes.forEach((item, index, arr) =>
+  mqttPart(mqttClient, item, index, arr.length - 1),
+)
