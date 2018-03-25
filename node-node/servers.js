@@ -1,32 +1,35 @@
 const WebSocket = require('ws')
 const mosca = require('mosca')
-const app = require('express')()
-const server = require('http').createServer(app)
 const configs = require('./configs')
-const { performance } = require('perf_hooks')
 
-const mqtt = new mosca.Server()
+const mqtt = new mosca.Server({ port: configs.mqtt.port })
 
 let mqttTime2 = []
 let mqttTime3 = []
 let mqttCount = 0
+
 mqtt.on('clientConnected', function(client) {
   console.log('[MQTT-server-log] New MQTT client connected')
   mqttTime2 = []
   mqttTime3 = []
   mqttCount = 0
 })
+
+mqtt.on('ready', () =>
+  console.log(`[MQTT-server-log] Connected, port: ${configs.mqtt.port}`),
+)
+
 mqtt.on('published', packet => {
   if (mqttCount !== configs.mqtt.limit) {
     if (packet.topic === '/p') {
-      mqttTime2.push(performance.now())
+      mqttTime2.push(Date.now())
       mqtt.publish(
         {
           payload: packet.payload,
           qos: packet.qos,
           topic: '/g',
         },
-        () => mqttTime3.push(performance.now()),
+        () => mqttTime3.push(Date.now()),
       )
       mqttCount++
     }
@@ -43,12 +46,6 @@ mqtt.on('published', packet => {
     mqttCount = 0
   }
 })
-
-mqtt.attachHttpServer(server)
-
-server.listen(configs.express.port, () =>
-  console.log(`[MQTT-server-log] Connected, port: ${configs.express.port}`),
-)
 
 const wss = new WebSocket.Server(
   {
@@ -84,9 +81,9 @@ wss.on('connection', ws => {
   let wsCount = 0
   ws.on('message', msg => {
     if (wsCount !== configs.ws.limit && !msg.includes('getAll')) {
-      wsTime2.push(performance.now())
+      wsTime2.push(Date.now())
       ws.send(msg)
-      wsTime3.push(performance.now())
+      wsTime3.push(Date.now())
       wsCount++
     } else {
       ws.send('postAll-' + wsTime2.join(',') + '|' + wsTime3.join(','))

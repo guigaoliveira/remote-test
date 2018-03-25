@@ -1,7 +1,6 @@
 const fs = require('fs')
 const mqtt = require('mqtt')
 const WebSocket = require('ws')
-const { performance } = require('perf_hooks')
 const configs = require('./configs')
 /*const {
   getMean,
@@ -30,7 +29,7 @@ const mqttPart = payloadSize => {
     client.subscribe('/postall')
     client.subscribe('/g', { qos: configs.mqtt.qos }, () => {
       client.publish('/p', payload, { qos: configs.mqtt.qos }, () => {
-        mqttTime1.push(performance.now())
+        mqttTime1.push(Date.now())
       })
     })
   })
@@ -38,10 +37,9 @@ const mqttPart = payloadSize => {
   client.on('message', (topic, message) => {
     if (mqttCount !== configs.mqtt.limit) {
       if (topic === '/g') {
-        mqttTime4.push(performance.now())
+        mqttTime4.push(Date.now())
         client.publish('/p', payload, { qos: configs.mqtt.qos }, () => {
-          if (mqttCount + 1 !== configs.mqtt.limit)
-            mqttTime1.push(performance.now())
+          if (mqttCount + 1 !== configs.mqtt.limit) mqttTime1.push(Date.now())
         })
         mqttCount++
       }
@@ -67,7 +65,7 @@ const mqttPart = payloadSize => {
       try {
         const fileName = `results-mqtt/mqtt-${
           configs.mqtt.limit
-        }-${payloadSize}-${new Date()}.csv`
+        }-${payloadSize}-${Date.now()}.csv`
         const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
         console.log('[MQTT-client-log] New CSV file saved:', fileName)
       } catch (e) {
@@ -90,15 +88,15 @@ const wsPart = payloadSize => {
   ws.on('open', () => {
     console.log('[WS-client-log] Connected')
     ws.send(payload)
-    wsTime1.push(performance.now())
+    wsTime1.push(Date.now())
   })
 
   ws.on('message', msg => {
     if (wsCount !== configs.ws.limit) {
       if (!msg.includes('postAll-')) {
-        wsTime4.push(performance.now())
+        wsTime4.push(Date.now())
         ws.send(payload)
-        if (wsCount + 1 !== configs.ws.limit) wsTime1.push(performance.now())
+        if (wsCount + 1 !== configs.ws.limit) wsTime1.push(Date.now())
         wsCount++
       }
     } else {
@@ -120,7 +118,7 @@ const wsPart = payloadSize => {
       try {
         const fileName = `results-ws/websocket-${
           configs.ws.limit
-        }-${payloadSize}-${new Date()}.csv`
+        }-${payloadSize}-${Date.now()}.csv`
         const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
         console.log('[WS-client-log] New CSV file saved:', fileName)
       } catch (e) {
