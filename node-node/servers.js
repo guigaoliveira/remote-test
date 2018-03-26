@@ -20,22 +20,19 @@ mqtt.on('ready', () =>
 )
 
 mqtt.on('published', packet => {
-  if (mqttCount !== configs.mqtt.limit) {
+  if (packet.topic.includes('$SYS') || packet.topic === '/g') return false
+  if (mqttCount < configs.mqtt.limit) {
     if (packet.topic === '/p') {
       mqttTime2.push(Date.now())
-      mqtt.publish(
-        {
-          payload: packet.payload,
-          qos: packet.qos,
-          topic: '/g',
-        },
-        () => mqttTime3.push(Date.now()),
-      )
+      mqtt.publish({
+        payload: packet.payload,
+        qos: packet.qos,
+        topic: '/g',
+      })
       mqttCount++
+      mqttTime3.push(Date.now())
     }
-  }
-
-  if (packet.topic === '/getall') {
+  } else {
     mqtt.publish({
       payload: mqttTime2.join(',') + '|' + mqttTime3.join(','),
       topic: '/postall',
@@ -75,17 +72,20 @@ const wss = new WebSocket.Server(
 
 wss.on('connection', ws => {
   console.log('[WS-server-log] New WS client connected')
-  const wsTime2 = []
-  const wsTime3 = []
+  let wsTime2 = []
+  let wsTime3 = []
   let wsCount = 0
   ws.on('message', msg => {
     if (wsCount !== configs.ws.limit && !msg.includes('getAll')) {
       wsTime2.push(Date.now())
       ws.send(msg)
-      wsTime3.push(Date.now())
       wsCount++
+      wsTime3.push(Date.now())
     } else {
       ws.send('postAll-' + wsTime2.join(',') + '|' + wsTime3.join(','))
+      wsTime2 = []
+      wsTime3 = []
+      wsCount = 0
     }
   })
 
