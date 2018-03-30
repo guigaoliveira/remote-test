@@ -52,7 +52,7 @@ client.on('message', (topic, message) => {
     mqttTime3 = arrayOfNumbers(mqttTime3)
     // console.log(mqttTime1.length, mqttTime2.length, mqttTime3.length, mqttTime4.length)
     const resultsToCSV = [
-      `T1, T2, T3, T4\n`,
+      `T1,T2,T3,T4\n`,
       ...mqttTime1.map(
         (item, index) =>
           `${item},${mqttTime2[index]},${mqttTime3[index]},${
@@ -116,7 +116,7 @@ ws.on('message', msg => {
     wsTime3 = arrayOfNumbers(wsTime3)
     // console.log(wsTime1.length, wsTime2.length, wsTime3.length, wsTime4.length)
     const resultsToCSV = [
-      `T1 (ms),T2 (ms),T3 (ms),T4 (ms)\n`,
+      `T1,T2,T3,T4\n`,
       ...wsTime1.map(
         (item, index) =>
           `${item},${wsTime2[index]},${wsTime3[index]},${wsTime4[index]}\n`,
