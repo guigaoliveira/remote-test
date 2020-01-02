@@ -64,7 +64,7 @@ client.on('message', (topic, message) => {
       const fileName = `results-mqtt/mqtt-${configs.mqtt.limit}-${
         mqttPayloadSizes[mqttCountPayload]
       }-${Date.now()}.csv`
-      const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
+      fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
       console.log('[MQTT-client-log] New CSV file saved:', fileName)
     } catch (e) {
       console.log('[MQTT-client-log] A CSV file can not be saved, error: ', e)
@@ -126,7 +126,7 @@ ws.on('message', msg => {
       const fileName = `results-ws/websocket-${configs.ws.limit}-${
         wsPayloadSizes[wsCountPayload]
       }-${Date.now()}.csv`
-      const file = fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
+      fs.writeFileSync(fileName, resultsToCSV.join(''), 'utf8')
       console.log('[WS-client-log] New CSV file saved:', fileName)
     } catch (e) {
       console.log('[WS-client-log] A CSV file can not be saved, error: ', e)
